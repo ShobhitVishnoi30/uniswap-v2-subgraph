@@ -11,9 +11,20 @@ type PairInfo @entity(immutable: true) {
 
   transactionHash: Bytes!
 
-  token0: Bytes!
+  token0: Token!
 
-  token1: Bytes!
+  token1: Token!
 
   creationTimestamp: BigInt!
+}
+
+type Token @entity {
+  id: String!
+
+  symbol: String!
+  name: String!
+  decimals: BigInt!
+
+  pairBase: [PairInfo!]! @derivedFrom(field: "token0")
+  pairQuote: [PairInfo!]! @derivedFrom(field: "token1")
 }

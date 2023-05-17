@@ -1,18 +1,24 @@
-import { PairCreated as PairCreatedEvent } from "../generated/UniswapV2Factory/UniswapV2Factory"
-import { PairCreated } from "../generated/schema"
+import { PairCreated as PairCreatedEvent } from "../generated/UniswapV2Factory/UniswapV2Factory";
+import { PairInfo, UniswapFactory } from "../generated/schema";
+import { FACTORY_ADDRESS } from "./utils/constant";
 
 export function handlePairCreated(event: PairCreatedEvent): void {
-  let entity = new PairCreated(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.token0 = event.params.token0
-  entity.token1 = event.params.token1
-  entity.pair = event.params.pair
-  entity.param3 = event.params.param3
+  let factoryEntity = UniswapFactory.load(FACTORY_ADDRESS.toHexString());
+  let pairEntity = PairInfo.load(event.params.pair.toHexString());
+  if (!factoryEntity) {
+    factoryEntity = new UniswapFactory(FACTORY_ADDRESS.toHexString());
+  }
+  if (!pairEntity) {
+    pairEntity = new PairInfo(event.params.pair.toHexString());
+  }
+  factoryEntity.pairCount = factoryEntity.pairCount + 1;
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  pairEntity.pairAddress = event.params.pair;
+  pairEntity.transactionHash = event.transaction.hash;
+  pairEntity.token0 = event.params.token0;
+  pairEntity.token1 = event.params.token1;
+  pairEntity.creationTimestamp = event.block.timestamp;
 
-  entity.save()
+  factoryEntity.save();
+  pairEntity.save();
 }
